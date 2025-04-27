@@ -1,0 +1,2 @@
+uuid=2bbd9dc8-1a8a-4a2c-80e5-5cfb61636870 vmpt=51888 agn=idx.hjt.dpdns.org agk=eyJhIjoiODk0OGQ5OWJlNTk0NGQ2NTU0NTM4OWEwYjY4YzhiNDUiLCJ0IjoiNDM3NTdjNTEtMGRhYi00NzhlLWE2ODEtZDA5ZTM5YWRmYWUwIiwicyI6Ik9UVTNNMlE0TlRBdE1qVmhOaTAwWVROaExUazVOV0V0TWpKalkyVTJZVFUxT0dZNCJ9 bash <(wget -qO- https://raw.githubusercontent.com/yonggekkk/argosb/main/argosb.sh)
+
