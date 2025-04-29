@@ -1,8 +1,10 @@
 ### ArgoSB一键无交互脚本：为IDX Google VPS专门设计，其他VPS也可安装
 
-#### 安装最新sing-box内核+最新Cloudflared-Argo内核，支持Argo临时/固定隧道
+#### 1、安装最新sing-box内核+最新Cloudflared-Argo内核，支持Argo临时/固定隧道
 
-#### 目前仅输出VMESS协议节点：13个端口节点及对应的优选不死IP全覆盖（80系无TLS+443系开TLS，两个IPV6）
+#### 2、Argo临时/固定隧道区别：服务器重启或者宕机恢复后，临时域名会重置，固定域名保持不变，仅此区别！
+
+#### 3、目前仅输出VMESS协议节点：13个端口节点及对应的优选不死IP全覆盖（80系无TLS+443系开TLS，两个IPV6）
 
 脚本如下，默认安装为Argo临时隧道（UUID、主协议vmess端口未设变量时，为随机生成）
 ```
@@ -17,11 +19,16 @@ bash <(curl -Ls https://raw.githubusercontent.com/yonggekkk/argosb/main/argosb.s
 ### 相关快捷方式：
 
 1、查看Argo的固定域名、固定域名的token、临时域名、当前节点信息：
+
 ```agsb``` 或者 原完整脚本
 
-2、升级ArgoSB脚本：```agsb up``` 或者 ```bash <(wget -qO- https://raw.githubusercontent.com/yonggekkk/argosb/main/argosb.sh) up```
+2、升级ArgoSB脚本：
 
-3、卸载ArgoSB脚本：```agsb del``` 或者 ```bash <(wget -qO- https://raw.githubusercontent.com/yonggekkk/argosb/main/argosb.sh) del```
+```agsb up``` 或者 ```bash <(wget -qO- https://raw.githubusercontent.com/yonggekkk/argosb/main/argosb.sh) up```
+
+3、卸载ArgoSB脚本：
+
+```agsb del``` 或者 ```bash <(wget -qO- https://raw.githubusercontent.com/yonggekkk/argosb/main/argosb.sh) del```
 
 ----------------------------------------------------------
 
