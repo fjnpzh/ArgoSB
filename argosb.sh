@@ -65,8 +65,8 @@ x86_64) cpu=amd64;;
 esac
 mkdir -p "$HOME/agsb"
 v4v6(){
-v4=$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k "$v46url") || (command -v wget >/dev/null 2>&1 && wget -4 --tries=2 -qO- "$v46url") )
-v6=$( (command -v curl >/dev/null 2>&1 && curl -s6m5 -k "$v46url") || (command -v wget >/dev/null 2>&1 && wget -6 --tries=2 -qO- "$v46url") )
+v4=$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k "$v46url" 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -4 --tries=2 -qO- "$v46url" 2>/dev/null) )
+v6=$( (command -v curl >/dev/null 2>&1 && curl -s6m5 -k "$v46url" 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -6 --tries=2 -qO- "$v46url" 2>/dev/null) )
 }
 warpsx(){
 if [ -n "$name" ]; then
@@ -103,8 +103,17 @@ xs6|s6x) s1outtag=warp-out; s2outtag=direct; x1outtag=warp-out; x2outtag=warp-ou
 esac
 fi
 fi
-case "$warp" in x4) wxryx='ForceIPv4' ;; x6) wxryx='ForceIPv6' ;; *) wxryx='ForceIPv4v6' ;; esac
-case "$warp" in x4|x6|x) if command -v curl >/dev/null 2>&1 && curl -s6m5 -k "$v46url" >/dev/null || command -v wget >/dev/null 2>&1 && wget -6 --tries=2 -qO- "$v46url" >/dev/null; then xryx='ForceIPv4v6' sbyx='prefer_ipv4'; else xryx='ForceIPv4' sbyx='ipv4_only'; fi ;; *) xryx='ForceIPv4v6' sbyx='prefer_ipv4' ;; esac
+case "$warp" in *x4*) wxryx='ForceIPv4' ;; *x6*) wxryx='ForceIPv6' ;; *) wxryx='ForceIPv4v6' ;; esac
+if (command -v curl >/dev/null 2>&1 && curl -s6m5 -k "$v46url" >/dev/null 2>&1) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -6 --tries=2 -qO- "$v46url" >/dev/null 2>&1); then
+xryx='ForceIPv6v4'; sbyx='prefer_ipv6'
+else
+case "$warp" in *x4*) xryx='ForceIPv4' ;; esac
+case "$warp" in *x6*) xryx='ForceIPv6v4' ;; esac
+case "$warp" in *s4*) sbyx='ipv4_only' ;; esac
+case "$warp" in *s6*) sbyx='prefer_ipv6' ;; esac
+[ -z "$xryx" ] && xryx='ForceIPv4v6'
+[ -z "$sbyx" ] && sbyx='prefer_ipv4'
+fi
 }
 
 insuuid(){
@@ -125,7 +134,7 @@ installxray(){
 echo
 echo "=========启用xray内核========="
 if [ ! -e "$HOME/agsb/xray" ]; then
-url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/xray-$cpu"; out="$HOME/agsb/xray"; (command -v curl >/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && wget -O "$out" --tries=2 "$url")
+url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/xray-$cpu"; out="$HOME/agsb/xray"; (command -v curl >/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
 chmod +x "$HOME/agsb/xray"
 sbcore=$("$HOME/agsb/xray" version 2>/dev/null | awk '/^Xray/{print $2}')
 echo "已安装Xray正式版内核：$sbcore"
@@ -133,10 +142,13 @@ fi
 cat > "$HOME/agsb/xr.json" <<EOF
 {
   "log": {
-    "access": "/dev/null",
-    "error": "/dev/null",
     "loglevel": "none"
   },
+  "dns": {
+    "servers": [
+      "${xsdns}"
+      ]
+   },
   "inbounds": [
 EOF
 insuuid
@@ -151,6 +163,10 @@ if [ ! -e "$HOME/agsb/xrk/private_key" ]; then
 key_pair=$("$HOME/agsb/xray" x25519)
 private_key=$(echo "$key_pair" | head -1 | awk '{print $3}')
 public_key=$(echo "$key_pair" | tail -n 1 | awk '{print $3}')
+
+#private_key=$(echo "$key_pair" | grep "PrivateKey" | awk '{print $2}')
+#public_key=$(echo "$key_pair" | grep "Password" | awk '{print $2}')
+
 short_id=$(date +%s%N | sha256sum | cut -c 1-8)
 echo "$private_key" > "$HOME/agsb/xrk/private_key"
 echo "$public_key" > "$HOME/agsb/xrk/public_key"
@@ -302,7 +318,7 @@ installsb(){
 echo
 echo "=========启用Sing-box内核========="
 if [ ! -e "$HOME/agsb/sing-box" ]; then
-url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/sing-box-$cpu"; out="$HOME/agsb/sing-box"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && wget -O "$out" --tries=2 "$url")
+url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/sing-box-$cpu"; out="$HOME/agsb/sing-box"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
 chmod +x "$HOME/agsb/sing-box"
 sbcore=$("$HOME/agsb/sing-box" version 2>/dev/null | awk '/version/{print $NF}')
 echo "已安装Sing-box正式版内核：$sbcore"
@@ -320,8 +336,8 @@ insuuid
 command -v openssl >/dev/null 2>&1 && openssl ecparam -genkey -name prime256v1 -out "$HOME/agsb/private.key" >/dev/null 2>&1
 command -v openssl >/dev/null 2>&1 && openssl req -new -x509 -days 36500 -key "$HOME/agsb/private.key" -out "$HOME/agsb/cert.pem" -subj "/CN=www.bing.com" >/dev/null 2>&1
 if [ ! -f "$HOME/agsb/private.key" ]; then
-url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/private.key"; out="$HOME/agsb/private.key"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && wget -q -O "$out" --tries=2 "$url")
-url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/cert.pem"; out="$HOME/agsb/cert.pem"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && wget -q -O "$out" --tries=2 "$url")
+url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/private.key"; out="$HOME/agsb/private.key"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -q -O "$out" --tries=2 "$url")
+url="https://github.com/yonggekkk/ArgoSB/releases/download/argosbx/cert.pem"; out="$HOME/agsb/cert.pem"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -q -O "$out" --tries=2 "$url")
 fi
 if [ -n "$hyp" ]; then
 hyp=hypt
@@ -670,6 +686,15 @@ cat >> "$HOME/agsb/sb.json" <<EOF
       }
     ],
     "final": "${s2outtag}"
+  },
+    "dns": {
+    "servers": [
+      {
+        "type": "https",
+        "server": "${xsdns}"
+      }
+    ],
+    "strategy": "${sbyx}"
   }
 }
 EOF
@@ -718,7 +743,7 @@ echo "=========启用Cloudflared-argo内核========="
 if [ ! -e "$HOME/agsb/cloudflared" ]; then
 argocore=$({ command -v curl >/dev/null 2>&1 && curl -Ls https://data.jsdelivr.com/v1/package/gh/cloudflare/cloudflared || wget -qO- https://data.jsdelivr.com/v1/package/gh/cloudflare/cloudflared; } | grep -Eo '"[0-9.]+"' | sed -n 1p | tr -d '",')
 echo "下载Cloudflared-argo最新正式版内核：$argocore"
-url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$cpu"; out="$HOME/agsb/cloudflared"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && wget -O "$out" --tries=2 "$url")
+url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$cpu"; out="$HOME/agsb/cloudflared"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
 chmod +x "$HOME/agsb/cloudflared"
 fi
 if [ -n "${ARGO_DOMAIN}" ] && [ -n "${ARGO_AUTH}" ]; then
@@ -787,7 +812,7 @@ fi
 }
 cip(){
 ipbest(){
-serip=$( (command -v curl >/dev/null 2>&1 && (curl -s4m5 -k "$v46url" || curl -s6m5 -k "$v46url") ) || (command -v wget >/dev/null 2>&1 && (wget -4 -qO- --tries=2 "$v46url" || wget -6 -qO- --tries=2 "$v46url") ) )
+serip=$( (command -v curl >/dev/null 2>&1 && (curl -s4m5 -k "$v46url" 2>/dev/null || curl -s6m5 -k "$v46url" 2>/dev/null) ) || (command -v wget >/dev/null 2>&1 && (timeout 3 wget -4 -qO- --tries=2 "$v46url" 2>/dev/null || timeout 3 wget -6 -qO- --tries=2 "$v46url" 2>/dev/null) ) )
 if echo "$serip" | grep -q ':'; then
 server_ip="[$serip]"
 echo "$server_ip" > "$HOME/agsb/server_ip.log"
@@ -1020,15 +1045,17 @@ if ! find /proc/*/exe -type l 2>/dev/null | grep -E '/proc/[0-9]+/exe' | xargs -
 for P in /proc/[0-9]*; do if [ -L "$P/exe" ]; then TARGET=$(readlink -f "$P/exe" 2>/dev/null); if echo "$TARGET" | grep -qE '/agsb/c|/agsb/s|/agsb/x'; then PID=$(basename "$P"); kill "$PID" 2>/dev/null && echo "Killed $PID ($TARGET)" || echo "Could not kill $PID ($TARGET)"; fi; fi; done
 kill -15 $(pgrep -f 'agsb/s' 2>/dev/null) $(pgrep -f 'agsb/c' 2>/dev/null) $(pgrep -f 'agsb/x' 2>/dev/null) >/dev/null 2>&1
 v4orv6(){
-if [ -z "$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k "$v46url") || (command -v wget >/dev/null 2>&1 && wget -4 -qO- --tries=2 "$v46url") )" ]; then
+if [ -z "$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k "$v46url" 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -4 -qO- --tries=2 "$v46url" 2>/dev/null) )" ]; then
 echo -e "nameserver 2a00:1098:2b::1\nnameserver 2a00:1098:2c::1" > /etc/resolv.conf
 fi
-if [ -n "$( (command -v curl >/dev/null 2>&1 && curl -s6m5 -k "$v46url") || (command -v wget >/dev/null 2>&1 && wget -6 -qO- --tries=2 "$v46url") )" ]; then
+if [ -n "$( (command -v curl >/dev/null 2>&1 && curl -s6m5 -k "$v46url" 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -6 -qO- --tries=2 "$v46url" 2>/dev/null) )" ]; then
 sendip="2606:4700:d0::a29f:c001"
 xendip="[2606:4700:d0::a29f:c001]"
+xsdns="[2001:4860:4860::8888]"
 else
 sendip="162.159.192.1"
 xendip="162.159.192.1"
+xsdns="8.8.8.8"
 fi
 }
 v4orv6
