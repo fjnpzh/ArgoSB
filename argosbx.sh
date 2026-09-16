@@ -94,8 +94,9 @@ fi
 v4v6(){
 v4=$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k "$v46url" 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -4 --tries=2 -qO- "$v46url" 2>/dev/null) )
 v6=$( (command -v curl >/dev/null 2>&1 && curl -s6m5 -k "$v46url" 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -6 --tries=2 -qO- "$v46url" 2>/dev/null) )
-v4dq=$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k https://myip.ipip.net/ | awk -F'来自于：' '{print $2}' 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -4 --tries=2 -qO- https://myip.ipip.net/ | awk -F'来自于：' '{print $2}' 2>/dev/null) )
+#v4dq=$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k https://myip.ipip.net/ | awk -F'来自于：' '{print $2}' 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -4 --tries=2 -qO- https://myip.ipip.net/ | awk -F'来自于：' '{print $2}' 2>/dev/null) )
 v6dq=$( (command -v curl >/dev/null 2>&1 && curl -s6m5 -k https://ip.fm | sed -n 's/.*Location: //p' 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -6 --tries=2 -qO- https://ip.fm | grep '<span class="has-text-grey-light">Location:' | tail -n1 | sed -E 's/.*>Location: <\/span>([^<]+)<.*/\1/' 2>/dev/null) )
+v4dq=$( (command -v curl >/dev/null 2>&1 && curl -s4m5 -k https://ip.fm | sed -n 's/.*Location: //p' 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget -4 --tries=2 -qO- https://ip.fm | grep '<span class="has-text-grey-light">Location:' | tail -n1 | sed -E 's/.*>Location: <\/span>([^<]+)<.*/\1/' 2>/dev/null) )
 }
 warpsx(){
 warpurl=$( (command -v curl >/dev/null 2>&1 && curl -sm5 -k https://warp.xijp.eu.org 2>/dev/null) || (command -v wget >/dev/null 2>&1 && timeout 3 wget --tries=2 -qO- https://warp.xijp.eu.org 2>/dev/null) )
@@ -1727,7 +1728,6 @@ cat <<EOF
                     "fingerprint": "chrome"
                 }
             },
-            "packet_encoding": "packetaddr",
             "transport": {
                 "headers": {
                     "Host": [
@@ -2101,7 +2101,6 @@ cat <<EOF
                     "fingerprint": "chrome"
                 }
             },
-            "packet_encoding": "packetaddr",
             "transport": {
                 "headers": {
                     "Host": [
@@ -2128,7 +2127,6 @@ cat <<EOF
                     "fingerprint": "chrome"
                 }
             },
-            "packet_encoding": "packetaddr",
             "transport": {
                 "headers": {
                     "Host": [
@@ -2225,184 +2223,184 @@ clgz="$({ get_func cludpxcpt1; get_func clxcpt1; get_func clvlpt1; get_func clss
 sbgz=$(printf "%s\n" "$sbgz" | sed '$ s/,$//')
 cat > $HOME/agsbx/sbox.json <<EOF
 {
-    "log": {
-        "disabled": false,
-        "level": "info",
-        "timestamp": true
-    },
-    "experimental": {
-        "cache_file": {
-            "enabled": true,
-            "path": "./cache.db",
-            "store_fakeip": true
-        },
-        "clash_api": {
-            "external_controller": "127.0.0.1:9090",
-            "external_ui": "ui",
-            "default_mode": "Rule"
-        }
-    },
-    "dns": {
-        "servers": [
-            {
-                "tag": "aliDns",
-                "type": "https",
-                "server": "dns.alidns.com",
-                "path": "/dns-query",
-                "domain_resolver": "local"
-            },
-            {
-                "tag": "local",
-                "type": "udp",
-                "server": "223.5.5.5"
-            },
-            {
-                "tag": "proxyDns",
-                "type": "https",
-                "server": "dns.google",
-                "path": "/dns-query",
-                "domain_resolver": "aliDns",
-                "detour": "proxy"
-            },
-           {
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "http_clients": [
+    {
+      "tag": "rule-set-direct"
+    }
+  ],
+  "dns": {
+    "servers": [
+      {
         "type": "fakeip",
         "tag": "fakeip",
         "inet4_range": "198.18.0.0/15",
         "inet6_range": "fc00::/18"
+      },
+      {
+        "type": "udp",
+        "tag": "dns-cn",
+        "server": "223.5.5.5",
+        "server_port": 53
+      },
+      {
+        "type": "https",
+        "tag": "dns-proxy",
+        "server": "dns.google",
+        "domain_resolver": "dns-cn",
+        "detour": "proxy"
       }
+    ],
+    "rules": [
+      {
+        "rule_set": [
+          "geosite-cn"
         ],
-        "rules": [
-            {
-                "rule_set": "geosite-cn",
-                "clash_mode": "Rule",
-                "server": "aliDns"
-            },
-            {
-                "clash_mode": "Direct",
-                "server": "local"
-            },
-            {
-                "clash_mode": "Global",
-                "server": "proxyDns"
-            },
-            {
+        "action": "route",
+        "server": "dns-cn"
+      },
+      {
         "query_type": [
           "A",
           "AAAA"
         ],
+        "action": "route",
         "server": "fakeip"
       }
-        ],
-        "final": "proxyDns",
-        "strategy": "prefer_ipv4"
+    ],
+    "final": "dns-proxy",
+    "strategy": "prefer_ipv4",
+    "cache_capacity": 8192,
+    "optimistic": {
+      "enabled": true,
+      "timeout": "1h"
     },
-	  "http_clients": [
+    "timeout": "10s",
+    "reverse_mapping": true
+  },
+  "inbounds": [
     {
-      "tag": "http-client-direct"
+      "type": "tun",
+      "tag": "tun-in",
+      "address": [
+        "172.19.0.1/30",
+        "fdfe:dcba:9876::1/126"
+      ],
+      "auto_route": true,
+      "strict_route": true,
+      "stack": "gvisor",
+      "mtu": 1420
     }
-    ],
-    "inbounds": [
-        {
-            "type": "tun",
-            "tag": "tun-in",
-            "address": [
-                "172.19.0.1/30",
-                "fd00::1/126"
-            ],
-            "auto_route": true,
-            "strict_route": true
-        }
-    ],
-    "route": {
-        "rules": [
-            {
-                "inbound": "tun-in",
-                "action": "sniff"
-            },
-            {
-                "type": "logical",
-                "mode": "or",
-                "rules": [
-                    {
-                        "port": 53
-                    },
-                    {
-                        "protocol": "dns"
-                    }
-                ],
-                "action": "hijack-dns"
-            },
-         {
-          "clash_mode": "Global",
-          "outbound": "proxy"
-         },
-        {
-        "rule_set": "geosite-cn",
-        "clash_mode": "Rule",
-        "outbound": "direct"
-       },
-     {
-    "rule_set": "geoip-cn",
-    "clash_mode": "Rule",
-    "outbound": "direct"
-      },
-     {
-    "ip_is_private": true,
-    "clash_mode": "Rule",
-    "outbound": "direct"
-    },
-     {
-      "clash_mode": "Direct",
-      "outbound": "direct"
-     }		
-        ],
-        "rule_set": [
-            {
-                "tag": "geosite-cn",
-                "type": "remote",
-                "format": "binary",
-                "url": "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/geolocation-cn.srs"
-            },
-            {
-                "tag": "geoip-cn",
-                "type": "remote",
-                "format": "binary",
-                "url": "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs"
-            }
-        ],
-        "final": "proxy",
-        "auto_detect_interface": true,
-        "default_http_client": "http-client-direct",
-        "default_domain_resolver": {
-        "server": "aliDns"
-        }
-    },
+  ],
   "outbounds": [
    $sbxy
-        {
-            "tag": "proxy",
-            "type": "selector",
-            "default": "auto",
-            "outbounds": [
+    {
+      "type": "selector",
+      "tag": "proxy",
+      "default": "auto",
+      "outbounds": [
         "auto",
         $sbgz
-            ]
-        },
-        {
-            "tag": "auto",
-            "type": "urltest",
-            "outbounds": [
-            $sbgz
-            ],
-            "url": "http://www.gstatic.com/generate_204",
-            "interval": "10m",
-            "tolerance": 50
-        },
-        {
-            "type": "direct",
-            "tag": "direct"
-        }
-    ]
+      ]
+    },
+    {
+      "type": "urltest",
+      "tag": "auto",
+      "outbounds": [
+      $sbgz
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "tolerance": 30,
+      "idle_timeout": "30m"
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    }
+  ],
+  "route": {
+    "default_http_client": "rule-set-direct",
+    "default_domain_resolver": "dns-cn",
+    "auto_detect_interface": true,
+    "rule_set": [
+      {
+        "tag": "geosite-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs"
+      },
+      {
+        "tag": "geoip-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs"
+      }
+    ],
+    "rules": [
+      {
+        "inbound": [
+          "tun-in"
+        ],
+        "protocol": [
+          "dns"
+        ],
+        "action": "hijack-dns"
+      },
+      {
+        "clash_mode": "Global",
+        "action": "route",
+        "outbound": "proxy"
+      },
+      {
+        "ip_is_private": true,
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": [
+          "geosite-cn"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": [
+          "geoip-cn"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "clash_mode": "Direct",
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "network": [
+          "tcp",
+          "udp"
+        ],
+        "port": 853,
+        "action": "reject"
+      }
+    ],
+    "final": "proxy"
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "store_dns": true
+    },
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "external_ui": "ui",
+      "default_mode": "Rule"
+    }
+  }
 }
 EOF
 
